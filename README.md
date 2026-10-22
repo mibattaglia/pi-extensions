@@ -1,11 +1,11 @@
 # pi-extensions
 
-A collection of [pi](https://github.com/mariozechner/pi) extensions by [hybrd-oss](https://github.com/hybrd-oss).
+A collection of [pi](https://github.com/mariozechner/pi) extensions.
 
 ## Install
 
 ```bash
-pi install https://github.com/hybrd-oss/pi-extensions
+pi install https://github.com/mibattaglia/pi-extensions
 ```
 
 This installs all extensions. Then run `/reload` in pi to activate them.
@@ -13,7 +13,7 @@ This installs all extensions. Then run `/reload` in pi to activate them.
 To uninstall:
 
 ```bash
-pi remove https://github.com/hybrd-oss/pi-extensions
+pi remove https://github.com/mibattaglia/pi-extensions
 ```
 
 ## Extensions
