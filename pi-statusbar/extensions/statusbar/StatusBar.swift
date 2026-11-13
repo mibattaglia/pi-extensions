@@ -1,5 +1,5 @@
 // pi-statusbar daemon: one NSStatusItem aggregating all running pi sessions.
-// Sessions connect via unix socket and send JSON lines: {"name": "...", "state": "working"|"attention"|"idle"}
+// Sessions connect via unix socket and send JSON lines: {"name": "...", "state": "working"|"waiting"|"attention"|"idle"}
 // A session = a socket connection; disconnect removes it. Daemon exits when the last session leaves.
 
 import AppKit
@@ -137,7 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 		}
 	}
 
-	// Closing the menu acknowledges attention: you saw it.
+	// Closing the menu acknowledges completed responses, but not active prompts.
 	func menuDidClose(_ menu: NSMenu) {
 		for fd in sessions.keys where sessions[fd]?.state == "attention" {
 			sessions[fd]?.state = "idle"
@@ -149,7 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
 	var aggregateState: String {
 		let states = sessions.values.map(\.state)
-		if states.contains("attention") { return "attention" }
+		if states.contains("attention") || states.contains("waiting") { return "attention" }
 		if states.contains("working") { return "working" }
 		return "idle"
 	}
@@ -201,7 +201,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 	func rebuildMenu() {
 		guard let menu = statusItem.menu else { return }
 		menu.removeAllItems()
-		let dots = ["working": "🔵", "attention": "🟠", "idle": "⚪️"]
+		let dots = ["working": "🔵", "waiting": "🟠", "attention": "🟠", "idle": "⚪️"]
 		for session in sessions.values.sorted(by: { $0.name < $1.name }) {
 			let dot = dots[session.state] ?? "⚪️"
 			let item = NSMenuItem(title: "\(dot) \(session.name) — \(session.state)", action: nil, keyEquivalent: "")

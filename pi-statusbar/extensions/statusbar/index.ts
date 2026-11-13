@@ -2,7 +2,7 @@
  * pi-statusbar: macOS menu bar status for pi sessions.
  *
  * Shows a pie icon in the menu bar aggregating all running pi sessions:
- * - orange filled pie: some session needs attention
+ * - orange filled pie: a session needs attention or is waiting for input
  * - spinning pie: some session is working (animation configurable)
  * - dim pie: all idle
  *
@@ -29,7 +29,7 @@ const BIN_DIR = join(os.homedir(), ".pi", "agent", "statusbar");
 const BIN = join(BIN_DIR, "pi-statusbar");
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "StatusBar.swift");
 
-type State = "working" | "attention" | "idle";
+type State = "working" | "waiting" | "attention" | "idle";
 
 export default function (pi: ExtensionAPI) {
 	if (process.platform !== "darwin") return;
@@ -99,14 +99,10 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("agent_start", async () => setState("working"));
-	pi.on("agent_settled", async () => setState("attention"));
+	pi.on("agent_settled", async (event) => setState(event.aborted ? "idle" : "attention"));
 
-	pi.on("tool_execution_start", async (event) => {
-		if (event.toolName === "ask_question") setState("attention");
-	});
-	pi.on("tool_execution_end", async (event) => {
-		if (event.toolName === "ask_question") setState("working");
-	});
+	pi.on("ui_prompt_start", async () => setState("waiting"));
+	pi.on("ui_prompt_end", async (_event, ctx) => setState(ctx.isIdle() ? "idle" : "working"));
 
 	pi.on("input", async () => {
 		attempts = 0; // user activity: allow reconnect attempts again
